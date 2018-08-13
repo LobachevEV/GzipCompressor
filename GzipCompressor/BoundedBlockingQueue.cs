@@ -4,16 +4,15 @@ using System.Threading;
 
 namespace GzipCompressor
 {
-    public class BoundedBlockingQueue<T>
+    public class BoundedBlockingQueue<T> : IDisposable
     {
-        private readonly Queue<T> queue = new Queue<T>();
-
         private readonly Semaphore nonEmptyQueueSemaphore =
             new Semaphore(0, int.MaxValue);
 
-        private bool completeAdding;
-
         private readonly Semaphore nonFullQueueSemaphore;
+        private readonly Queue<T> queue = new Queue<T>();
+
+        private bool completeAdding;
 
         public BoundedBlockingQueue(int boundedCapacity)
         {
@@ -29,17 +28,18 @@ namespace GzipCompressor
         public void Add(T value)
         {
             nonFullQueueSemaphore.WaitOne();
-            lock (queue) queue.Enqueue(value);
+            lock (queue)
+            {
+                queue.Enqueue(value);
+            }
+
             nonEmptyQueueSemaphore.Release();
         }
 
         public T Take()
         {
             T item;
-            if (!TryTake(out item))
-            {
-                throw new InvalidOperationException();
-            }
+            if (!TryTake(out item)) throw new InvalidOperationException();
 
             return item;
         }
@@ -47,10 +47,7 @@ namespace GzipCompressor
         public IEnumerable<T> Consume()
         {
             T element;
-            while (TryTake(out element))
-            {
-                yield return element;
-            }
+            while (TryTake(out element)) yield return element;
         }
 
         private bool TryTake(out T result)
@@ -58,7 +55,6 @@ namespace GzipCompressor
             result = default(T);
 
             if (!completeAdding)
-            {
                 try
                 {
                     nonEmptyQueueSemaphore.WaitOne();
@@ -67,19 +63,21 @@ namespace GzipCompressor
                 {
                     return false;
                 }
-            }
 
             lock (queue)
             {
-                if (queue.Count == 0)
-                {
-                    return false;
-                }
+                if (queue.Count == 0) return false;
                 result = queue.Dequeue();
             }
 
             nonFullQueueSemaphore.Release();
             return true;
+        }
+
+        public void Dispose()
+        {
+            nonEmptyQueueSemaphore.Close();
+            nonFullQueueSemaphore.Close();
         }
     }
 }

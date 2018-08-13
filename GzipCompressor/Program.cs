@@ -6,34 +6,34 @@ namespace GzipCompressor
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+            InputValidator.Validate(args);
             var mode = args[0];
-            var sourceFile = args[1];
-            var targetFile = args[2];
-
-            if (!File.Exists(sourceFile))
-            {
-                Console.WriteLine("Source file does not exist");
-                return;
-            }
+            var sourceFilePath = args[1];
+            var targetFilePath = args[2];
 
             var compressor = new GzipComperssor();
-            if (mode.Equals("compress", StringComparison.OrdinalIgnoreCase))
+            switch (mode.ToLowerInvariant())
             {
-                var stopWatch = Stopwatch.StartNew();
-                compressor.Compress(sourceFile, targetFile);
-                stopWatch.Stop();
-                Console.WriteLine(stopWatch.ElapsedMilliseconds);
-            }
-            else if (mode.Equals("decompress", StringComparison.OrdinalIgnoreCase))
-            {
-                compressor.Decompress(sourceFile, targetFile);
+                case "compress":
+                    var stopWatch = Stopwatch.StartNew();
+                    compressor.Compress(sourceFilePath, targetFilePath);
+                    stopWatch.Stop();
+                    Console.WriteLine(stopWatch.ElapsedMilliseconds);
+                    break;
+                case "decompress":
+                    compressor.Decompress(sourceFilePath, targetFilePath);
+                    break;
+                default:
+                    throw new ArgumentException(
+                        "Mode is incorrect. Please choose one of: compress, decompress.");
             }
         }
-        
-        static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
+
+        private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
+        {
             Console.WriteLine(e.ExceptionObject.ToString());
             Console.WriteLine("Press Enter to continue");
             Console.ReadLine();
