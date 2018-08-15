@@ -19,6 +19,12 @@ namespace GzipCompressor
             nonFullQueueSemaphore = new Semaphore(boundedCapacity, boundedCapacity);
         }
 
+        public void Dispose()
+        {
+            nonEmptyQueueSemaphore.Close();
+            nonFullQueueSemaphore.Close();
+        }
+
         public void CompleteAdding()
         {
             completeAdding = true;
@@ -72,12 +78,6 @@ namespace GzipCompressor
 
             nonFullQueueSemaphore.Release();
             return true;
-        }
-
-        public void Dispose()
-        {
-            nonEmptyQueueSemaphore.Close();
-            nonFullQueueSemaphore.Close();
         }
     }
 }

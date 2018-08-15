@@ -38,13 +38,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AggregateException.cs" />
     <Compile Include="BoundedBlockingQueue.cs" />
-    <Compile Include="GzipComperssor.cs" />
-    <Compile Include="InputValidator.cs" />
+    <Compile Include="GzipCompressor.cs" />
+    <Compile Include="Infrastructure\AggregateException.cs" />
+    <Compile Include="Infrastructure\InputValidator.cs" />
+    <Compile Include="Infrastructure\Logging\ConsoleLogger.cs" />
+    <Compile Include="Infrastructure\Logging\LogFactory.cs" />
+    <Compile Include="Infrastructure\Logging\Logger.cs" />
+    <Compile Include="Infrastructure\Logging\LogLevel.cs" />
+    <Compile Include="Infrastructure\StopwatchHelper.cs" />
+    <Compile Include="Infrastructure\StreamExtentions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StreamExtentions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

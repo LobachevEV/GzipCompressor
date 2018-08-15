@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor
 {
@@ -13,18 +13,18 @@ namespace GzipCompressor
             var mode = args[0];
             var sourceFilePath = args[1];
             var targetFilePath = args[2];
+            LogSettings.LogLevel = GetLogLevel(args);
+            var logManager = LogFactory.GetInstance();
+            var logger = logManager.GetLogger<ConsoleLogger>();
+            var compressor = new GzipCompressor(logger);
 
-            var compressor = new GzipComperssor();
             switch (mode.ToLowerInvariant())
             {
                 case "compress":
-                    var stopWatch = Stopwatch.StartNew();
-                    compressor.Compress(sourceFilePath, targetFilePath);
-                    stopWatch.Stop();
-                    Console.WriteLine(stopWatch.ElapsedMilliseconds);
+                    StopwatchHelper.Time(() => compressor.Compress(sourceFilePath, targetFilePath), logger);
                     break;
                 case "decompress":
-                    compressor.Decompress(sourceFilePath, targetFilePath);
+                    StopwatchHelper.Time(() => compressor.Decompress(sourceFilePath, targetFilePath), logger);
                     break;
                 default:
                     throw new ArgumentException(
@@ -32,10 +32,19 @@ namespace GzipCompressor
             }
         }
 
+        private static LogLevel GetLogLevel(string[] args)
+        {
+            for (var i = 0; i < args.Length; i++)
+                if (args[i].Equals("-s", StringComparison.InvariantCulture) && i + 1 < args.Length)
+                    return (LogLevel) Enum.Parse(typeof(LogLevel), args[i + 1]);
+            return LogLevel.Info;
+        }
+
         private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
         {
-            Console.WriteLine(e.ExceptionObject.ToString());
-            Console.WriteLine("Press Enter to continue");
+            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
+            logger.Error(e.ExceptionObject.ToString());
+            logger.Info("Press Enter to continue");
             Console.ReadLine();
             Environment.Exit(1);
         }

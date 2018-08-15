@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Threading;
 
-namespace GzipCompressor
+namespace GzipCompressor.Infrastructure
 {
     public static class StreamExtentions
     {
@@ -13,11 +13,13 @@ namespace GzipCompressor
                 {
                     const int bufferSize = 16 * 1024;
                     var buffer = new byte[bufferSize];
-                    var readBytesCount = bufferSize;
-                    while (batchSize == 0 ? readBytesCount != 0 : readBytesCount < batchSize)
+                    var currentBatchSize = 0;
+                    while (batchSize == 0 || currentBatchSize < batchSize)
                     {
-                        readBytesCount += source.Read(buffer, 0, buffer.Length);
+                        var readBytes = source.Read(buffer, 0, buffer.Length);
+                        if (readBytes == 0) break;
                         queue.Add(buffer);
+                        currentBatchSize += readBytes;
                     }
 
                     queue.CompleteAdding();
