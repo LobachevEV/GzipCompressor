@@ -1,8 +1,6 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using GzipComressor.Infrastructure.Logging;
 
 namespace GzipCompressor.AdvanceCopier
@@ -44,7 +42,7 @@ namespace GzipCompressor.AdvanceCopier
 
                         workerPool.WaitAll();
                     }, processedQueue.CompleteAdding);
-                    scheduler.StartNew(() => WriteToFile(target, processedQueue));
+                    scheduler.StartNew(() => WriteToFile(processedQueue, target));
                     scheduler.WaitAll();
                 }
             }
@@ -62,16 +60,16 @@ namespace GzipCompressor.AdvanceCopier
             }
         }
 
-        private void WriteToFile(Stream target, BoundedBlockingQueue<IndexedBuffer> compressedQueue)
+        private void WriteToFile(BoundedBlockingQueue<IndexedBuffer> source, Stream target)
         {
             var awaitDict = new Dictionary<int, IndexedBuffer>();
             var currentIndex = 0;
-            foreach (var buffer in compressedQueue.Consume())
+            foreach (var buffer in source.Consume())
             {
                 var bufferIndex = buffer.Index;
                 if (currentIndex == bufferIndex)
                 {
-                    Write(target, buffer);
+                    Write( buffer, target);
                     currentIndex++;
                     continue;
                 }
@@ -84,17 +82,17 @@ namespace GzipCompressor.AdvanceCopier
 
             while (awaitDict.ContainsKey(currentIndex))
             {
-                Write(target, awaitDict[currentIndex]);
+                Write(awaitDict[currentIndex], target);
                 currentIndex++;
             }
         }
 
-        private void Write(Stream target, IndexedBuffer buffer)
+        private void Write(IndexedBuffer buffer, Stream target)
         {
             logger.Debug($"Write {buffer.Index} buffer");
             if (buffer.Data.Length == 0)
                 return;
-            
+
             target.Write(buffer.Data, 0, buffer.Data.Length);
             target.Flush();
             GC.Collect();

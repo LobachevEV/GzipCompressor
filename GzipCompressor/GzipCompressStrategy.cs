@@ -10,13 +10,6 @@ namespace GzipCompressor
     {
         public byte[] Process(byte[] buffer)
         {
-            var indexedBuffer = new IndexedBuffer(i);
-            i++;
-            workerPool.StartNew(() =>
-            {
-                indexedBuffer.Data = strategy.Process(buffer);
-                processedQueue.Add(indexedBuffer);
-            });
             using (var bufferStream = new MemoryStream())
             {
                 using (var compressedStream = new GZipStream(bufferStream, CompressionMode.Compress, true))
