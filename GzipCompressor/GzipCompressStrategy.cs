@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using GzipCompressor.AdvanceCopier;
@@ -27,6 +27,8 @@ namespace GzipCompressor
 
     public class GzipDecompressionStrategy : IAdvanceCopierStrategy
     {
+        private readonly byte[] gzipHeader = new byte[] { 31, 139, 8, 0, 0, 0, 0, 0, 4, 0 };
+        private readonly List<byte> temp = new List<byte>();
         public byte[] Process(byte[] buffer)
         {
             using (var bufferStream = new MemoryStream(buffer))
@@ -38,6 +40,24 @@ namespace GzipCompressor
                     return buf;
                 }
             }
+        }
+            
+        private static bool CompareArrays(byte[] array, int startIndex, byte[] arrayToCompare)
+        {
+            if (startIndex < 0 || startIndex > array.Length - arrayToCompare.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < arrayToCompare.Length; i++)
+            {
+                if (array[startIndex + i] != arrayToCompare[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
