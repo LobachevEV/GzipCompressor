@@ -1,6 +1,8 @@
 ﻿using System;
-using GzipCompressor.Infrastructure;
-using GzipCompressor.Infrastructure.Logging;
+using System.IO;
+using GzipCompressor.AdvanceCopier;
+using GzipComressor.Infrastructure;
+using GzipComressor.Infrastructure.Logging;
 
 namespace GzipCompressor
 {
@@ -16,16 +18,21 @@ namespace GzipCompressor
             LogSettings.LogLevel = GetLogLevel(args);
             var logManager = LogFactory.GetInstance();
             var logger = logManager.GetLogger<ConsoleLogger>();
-            var compressor = new GzipCompressor(logger);
+            if (File.Exists(targetFilePath)) File.Delete(targetFilePath);
 
+            var strategy = GetStrategy(mode);
+            var fileAdvanceCopier = new FileAdvanceCopier(strategy, logger);
+            StopwatchHelper.Time(() => fileAdvanceCopier.Copy(sourceFilePath, targetFilePath), logger);
+        }
+
+        private static IAdvanceCopierStrategy GetStrategy(string mode)
+        {
             switch (mode.ToLowerInvariant())
             {
                 case "compress":
-                    StopwatchHelper.Time(() => compressor.Compress(sourceFilePath, targetFilePath), logger);
-                    break;
+                    return new GzipCompressStrategy();
                 case "decompress":
-                    StopwatchHelper.Time(() => compressor.Decompress(sourceFilePath, targetFilePath), logger);
-                    break;
+                    return new GzipDecompressionStrategy();
                 default:
                     throw new ArgumentException(
                         "Mode is incorrect. Please choose one of: compress, decompress.");
@@ -35,7 +42,7 @@ namespace GzipCompressor
         private static LogLevel GetLogLevel(string[] args)
         {
             for (var i = 0; i < args.Length; i++)
-                if (args[i].Equals("-s", StringComparison.InvariantCulture) && i + 1 < args.Length)
+                if (args[i].Equals("-l", StringComparison.InvariantCulture) && i + 1 < args.Length)
                     return (LogLevel) Enum.Parse(typeof(LogLevel), args[i + 1]);
             return LogLevel.Info;
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace GzipCompressor.Infrastructure
+namespace GzipComressor.Infrastructure
 {
     public class InputValidator
     {

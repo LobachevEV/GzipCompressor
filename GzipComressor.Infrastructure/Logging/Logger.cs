@@ -1,4 +1,4 @@
-﻿namespace GzipCompressor.Infrastructure.Logging
+﻿namespace GzipComressor.Infrastructure.Logging
 {
     public abstract class Logger
     {
@@ -16,12 +16,12 @@
 
         public void Debug(string message)
         {
-            if (MinimumLogLevel <= LogLevel.Debug) Log(LogLevel.Info.ToString(), message);
+            if (MinimumLogLevel <= LogLevel.Debug) Log(LogLevel.Debug.ToString(), message);
         }
 
         public void Error(string message)
         {
-            if (MinimumLogLevel <= LogLevel.Error) Log(LogLevel.Info.ToString(), message);
+            if (MinimumLogLevel <= LogLevel.Error) Log(LogLevel.Error.ToString(), message);
         }
 
         protected abstract void Log(string level, string message);

@@ -1,4 +1,4 @@
-﻿namespace GzipCompressor.Infrastructure.Logging
+﻿namespace GzipComressor.Infrastructure.Logging
 {
     public enum LogLevel
     {

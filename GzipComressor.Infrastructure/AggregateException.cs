@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GzipCompressor.Infrastructure
+namespace GzipComressor.Infrastructure
 {
     public class AggregateException : Exception
     {

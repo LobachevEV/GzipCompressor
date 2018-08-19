@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GzipCompressor.Infrastructure.Logging
+namespace GzipComressor.Infrastructure.Logging
 {
     public static class LogSettings
     {

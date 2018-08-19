@@ -1,6 +1,7 @@
 ﻿using System;
+using GzipComressor.Infrastructure.Logging;
 
-namespace GzipCompressor.Infrastructure.Logging
+namespace GzipCompressor
 {
     public class ConsoleLogger : Logger
     {

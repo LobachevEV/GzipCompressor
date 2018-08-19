@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using GzipCompressor.Infrastructure.Logging;
+using GzipComressor.Infrastructure.Logging;
 
-namespace GzipCompressor.Infrastructure
+namespace GzipComressor.Infrastructure
 {
     public static class StopwatchHelper
     {
@@ -11,7 +11,7 @@ namespace GzipCompressor.Infrastructure
             var stopWatch = Stopwatch.StartNew();
             action.Invoke();
             stopWatch.Stop();
-            logger.Debug($"{stopWatch.ElapsedMilliseconds} ms");
+            logger.Debug($"{stopWatch.Elapsed} ms");
         }
     }
 }

@@ -38,18 +38,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BoundedBlockingQueue.cs" />
-    <Compile Include="GzipCompressor.cs" />
-    <Compile Include="Infrastructure\AggregateException.cs" />
-    <Compile Include="Infrastructure\InputValidator.cs" />
-    <Compile Include="Infrastructure\Logging\ConsoleLogger.cs" />
-    <Compile Include="Infrastructure\Logging\LogFactory.cs" />
-    <Compile Include="Infrastructure\Logging\Logger.cs" />
-    <Compile Include="Infrastructure\Logging\LogLevel.cs" />
-    <Compile Include="Infrastructure\StopwatchHelper.cs" />
-    <Compile Include="Infrastructure\StreamExtentions.cs" />
+    <Compile Include="ConsoleLogger.cs" />
+    <Compile Include="GzipCompressStrategy.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GzipCompressor.AdvanceCopier\GzipCompressor.AdvanceCopier.csproj">
+      <Project>{c4cecd68-98e2-4262-90d6-a35cd0fdf297}</Project>
+      <Name>GzipCompressor.AdvanceCopier</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GzipComressor.Infrastructure\GzipComressor.Infrastructure.csproj">
+      <Project>{66802535-d2db-4197-894e-1aa8d0eaa636}</Project>
+      <Name>GzipComressor.Infrastructure</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
