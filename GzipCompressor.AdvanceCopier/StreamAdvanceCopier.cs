@@ -25,19 +25,26 @@ namespace GzipCompressor.AdvanceCopier
             using (var readQueue = new BoundedBlockingQueue<byte[]>(100))
             {
                 scheduler.StartNew(() => ReadToQueue(source, readQueue), readQueue.CompleteAdding);
-                using (var processedQueue = new BoundedBlockingQueue<byte[]>(100))
+                using (var processedQueue = new BoundedBlockingQueue<IndexedBuffer>(100))
                 {
                     scheduler.StartNew(() =>
                     {
                         var workerPool = new WorkerScheduler(16, logger);
+                        var i = 0;
                         foreach (var buffer in readQueue.Consume())
                         {
-                            workerPool.StartNew(() => processedQueue.Add(strategy.Process(buffer)));
+                            var indexedBuffer = new IndexedBuffer(i);
+                            i++;
+                            workerPool.StartNew(() =>
+                            {
+                                indexedBuffer.Data = strategy.Process(buffer);
+                                processedQueue.Add(indexedBuffer);
+                            });
                         }
 
                         workerPool.WaitAll();
                     }, processedQueue.CompleteAdding);
-                    scheduler.StartNew(() => { WriteToFileAsync(target, processedQueue); });
+                    scheduler.StartNew(() => WriteToFile(target, processedQueue));
                     scheduler.WaitAll();
                 }
             }
@@ -46,7 +53,7 @@ namespace GzipCompressor.AdvanceCopier
         private void ReadToQueue(Stream source, BoundedBlockingQueue<byte[]> queue)
         {
             var readedBytes = 1;
-            const int bufferSize = 1024 * 1024;
+            const int bufferSize = 6 * 1024 * 1024;
             while (readedBytes > 0)
             {
                 var buffer = new byte[bufferSize];
@@ -55,14 +62,59 @@ namespace GzipCompressor.AdvanceCopier
             }
         }
 
-        private void WriteToFileAsync(Stream target, BoundedBlockingQueue<byte[]> compressedQueue)
+        private void WriteToFile(Stream target, BoundedBlockingQueue<IndexedBuffer> compressedQueue)
         {
+            var awaitDict = new Dictionary<int, IndexedBuffer>();
+            var currentIndex = 0;
             foreach (var buffer in compressedQueue.Consume())
             {
-                target.Write(buffer, 0, buffer.Length);
-                target.Flush();
-                GC.Collect();
+                var bufferIndex = buffer.Index;
+                if (currentIndex == bufferIndex)
+                {
+                    Write(target, buffer);
+                    currentIndex++;
+                    continue;
+                }
+
+                if (bufferIndex > currentIndex)
+                {
+                    awaitDict[bufferIndex] = buffer;
+                }
             }
+
+            while (awaitDict.ContainsKey(currentIndex))
+            {
+                Write(target, awaitDict[currentIndex]);
+                currentIndex++;
+            }
+        }
+
+        private void Write(Stream target, IndexedBuffer buffer)
+        {
+            logger.Debug($"Write {buffer.Index} buffer");
+            if (buffer.Data.Length == 0)
+                return;
+            
+            target.Write(buffer.Data, 0, buffer.Data.Length);
+            target.Flush();
+            GC.Collect();
+        }
+
+        private class IndexedBuffer
+        {
+            public IndexedBuffer(int index, byte[] data)
+            {
+                Index = index;
+                Data = data;
+            }
+
+            public IndexedBuffer(int index)
+            {
+                Index = index;
+            }
+
+            public int Index { get; set; }
+            public byte[] Data { get; set; }
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using GzipCompressor.AdvanceCopier;
 
 namespace GzipCompressor
@@ -9,6 +10,13 @@ namespace GzipCompressor
     {
         public byte[] Process(byte[] buffer)
         {
+            var indexedBuffer = new IndexedBuffer(i);
+            i++;
+            workerPool.StartNew(() =>
+            {
+                indexedBuffer.Data = strategy.Process(buffer);
+                processedQueue.Add(indexedBuffer);
+            });
             using (var bufferStream = new MemoryStream())
             {
                 using (var compressedStream = new GZipStream(bufferStream, CompressionMode.Compress, true))
@@ -34,7 +42,7 @@ namespace GzipCompressor
             using (var bufferStream = new MemoryStream(buffer))
             {
                 using (var compressedStream = new GZipStream(bufferStream, CompressionMode.Decompress, true))
-                {
+                {    
                     var buf = new byte[bufferStream.Length];
                     compressedStream.Read(buf, 0, buf.Length);
                     return buf;
@@ -49,15 +57,7 @@ namespace GzipCompressor
                 return false;
             }
 
-            for (int i = 0; i < arrayToCompare.Length; i++)
-            {
-                if (array[startIndex + i] != arrayToCompare[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return !arrayToCompare.Where((t, i) => array[startIndex + i] != t).Any();
         }
     }
 }
