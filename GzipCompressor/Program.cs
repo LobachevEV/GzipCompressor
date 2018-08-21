@@ -20,22 +20,39 @@ namespace GzipCompressor
             var logger = logManager.GetLogger<ConsoleLogger>();
             if (File.Exists(targetFilePath)) File.Delete(targetFilePath);
 
-            var strategy = GetStrategy(mode);
-            var fileAdvanceCopier = new FileAdvanceCopier(strategy, logger);
+            var processor = GetProcessor(mode);
+            var reader = GetReader(mode);
+            var fileAdvanceCopier = new FileAdvanceCopier(reader, processor, new OrderingWriter(), logger);
             StopwatchHelper.Time(() => fileAdvanceCopier.Copy(sourceFilePath, targetFilePath), logger);
         }
 
-        private static IAdvanceCopierStrategy GetStrategy(string mode)
+        private static IProcessor GetProcessor(string mode)
+        {
+            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
+            var scheduler = new WorkerScheduler(16, logger);
+            switch (mode.ToLowerInvariant())
+            {
+                case "compress":
+                    return new GzipCompressor(scheduler, logger);
+                case "decompress":
+                    return new GzipDecompressor(scheduler, logger);
+                default:
+                    throw new ArgumentException(
+                        "The mode is incorrect. Please choose one of the following options: compress, decompress.");
+            }
+        }
+
+        private static IStreamReader GetReader(string mode)
         {
             switch (mode.ToLowerInvariant())
             {
                 case "compress":
-                    return new GzipCompressStrategy();
+                    return new DefaultStreamReader();
                 case "decompress":
-                    return new GzipDecompressionStrategy();
+                    return new GzipStreamReader();
                 default:
                     throw new ArgumentException(
-                        "Mode is incorrect. Please choose one of: compress, decompress.");
+                        "The mode is incorrect. Please choose one of the following options: compress, decompress.");
             }
         }
 
@@ -51,7 +68,7 @@ namespace GzipCompressor
         {
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             logger.Error(e.ExceptionObject.ToString());
-            logger.Info("Press Enter to continue");
+            Console.WriteLine("Press Enter to continue");
             Console.ReadLine();
             Environment.Exit(1);
         }

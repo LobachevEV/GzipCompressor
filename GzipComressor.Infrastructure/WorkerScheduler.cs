@@ -2,13 +2,13 @@
 using System.Threading;
 using GzipComressor.Infrastructure.Logging;
 
-namespace GzipCompressor.AdvanceCopier
+namespace GzipComressor.Infrastructure
 {
-    internal class WorkerScheduler
+    public class WorkerScheduler
     {
+        private readonly Logger logger;
         private readonly int maxCount;
         private int threadsCount;
-        private readonly Logger logger;
 
         public WorkerScheduler(int maxCount, Logger logger)
         {
@@ -26,7 +26,6 @@ namespace GzipCompressor.AdvanceCopier
                 callBack?.Invoke();
             }).Start();
             Interlocked.Increment(ref threadsCount);
-            logger.Debug($"Started {threadsCount} thred");
         }
 
         public void WaitAll()

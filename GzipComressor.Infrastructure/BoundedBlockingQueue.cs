@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace GzipCompressor.AdvanceCopier
+namespace GzipComressor.Infrastructure
 {
     public class BoundedBlockingQueue<T> : IDisposable
     {
