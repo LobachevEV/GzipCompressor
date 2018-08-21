@@ -12,7 +12,6 @@ namespace GzipCompressor.AdvanceCopier
         {
             var awaitDict = new Dictionary<int, IndexedBuffer>();
             var currentIndex = 0;
-            var scheduler = new WorkerScheduler(16, null);
             foreach (var buffer in source.Consume())
             {
                 var bufferIndex = buffer.Index;
