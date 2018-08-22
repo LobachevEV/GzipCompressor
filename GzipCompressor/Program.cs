@@ -29,7 +29,7 @@ namespace GzipCompressor
         private static IProcessor GetProcessor(string mode)
         {
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
-            var scheduler = new WorkerScheduler(16, logger);
+            var scheduler = new WorkerScheduler(Environment.ProcessorCount * 2, logger);
             switch (mode.ToLowerInvariant())
             {
                 case "compress":

@@ -6,7 +6,7 @@ namespace GzipCompressor.AdvanceCopier
 {
     public class DefaultStreamReader : IStreamReader
     {
-        private readonly int bufferSize = 42 * 1024;
+        private readonly int bufferSize = 16 * 1024 * 1024;
 
         public DefaultStreamReader()
         {

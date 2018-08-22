@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayExtentions.cs" />
     <Compile Include="GzipCompressor.cs" />
     <Compile Include="GzipDecompressor.cs" />
     <Compile Include="GzipStreamReader.cs" />

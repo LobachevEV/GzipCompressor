@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using GzipCompressor.AdvanceCopier;
 using GzipComressor.Infrastructure;
 using GzipComressor.Infrastructure.Logging;
@@ -10,6 +11,7 @@ namespace GzipCompressor
 {
     public class GzipDecompressor : IProcessor
     {
+        private readonly byte[] gzipHeader = {31, 139, 8, 0, 0, 0, 0, 0, 4, 0};
         private readonly Logger logger;
         private readonly WorkerScheduler scheduler;
 
@@ -32,31 +34,51 @@ namespace GzipCompressor
                     target.Add(indexedBuffer);
                     logger.Debug($"Processed buffer {indexedBuffer.Index}");
                 });
-                scheduler.WaitAll();
             }
+
+            scheduler.WaitAll();
         }
 
-        private byte[] Decompress(byte[] buffer)
+        private byte[] Decompress(byte[] compressedBuffer)
         {
-            using (var bufferStream = new MemoryStream(buffer))
-            {
-                using (var compressedStream = new GZipStream(bufferStream, CompressionMode.Decompress))
+            logger.Debug($"Get to process bytes {compressedBuffer.Length}");
+            var result = new List<byte>();
+            foreach (var chunk in Parse(compressedBuffer))
+                using (var memoryStream = new MemoryStream(chunk))
                 {
-                    var result = new List<byte>();
-                    while (true)
+                    using (var compressedStream = new GZipStream(memoryStream, CompressionMode.Decompress))
                     {
-                        var temp = new byte[buffer.Length];
-                        var readedBytes = compressedStream.Read(temp, 0, temp.Length);
-                        
-                        if (readedBytes == 0) break;
+                        while (true)
+                        {
+                            var decompressedBuffer = new byte[chunk.Length];
+                            var readedBytes = compressedStream.Read(decompressedBuffer, 0, decompressedBuffer.Length);
 
-                        if (readedBytes < temp.Length) Array.Resize(ref temp, readedBytes);
-                        result.AddRange(temp);
+                            if (readedBytes == 0) break;
+
+                            if (readedBytes < decompressedBuffer.Length)
+                                Array.Resize(ref decompressedBuffer, readedBytes);
+                            result.AddRange(decompressedBuffer);
+                        }
                     }
-                    logger.Debug($"Read bytes {result.Count}");
-                    return result.ToArray();
                 }
-            }
+
+            logger.Debug($"Processed bytes {result.Count}");
+            return result.ToArray();
+        }
+
+        private byte[][] Parse(byte[] buffer)
+        {
+            var indexes = buffer.FindStartingIndexes(gzipHeader).ToList();
+            logger.Debug($"Decopmressor - Indexes found {indexes.Count}");
+            return indexes.Select((currentIndex, i) =>
+            {
+                var nextIndex = indexes.Count == i + 1 ? buffer.Length : indexes[i + 1];
+                var toCopyCount = nextIndex - currentIndex;
+                var result = new byte[toCopyCount];
+                Array.Copy(buffer, currentIndex, result, 0, toCopyCount);
+
+                return result;
+            }).ToArray();
         }
     }
 }

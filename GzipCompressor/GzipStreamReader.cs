@@ -4,14 +4,15 @@ using System.IO;
 using System.Linq;
 using GzipCompressor.AdvanceCopier;
 using GzipComressor.Infrastructure;
+using GzipComressor.Infrastructure.Logging;
 
 namespace GzipCompressor
 {
     public class GzipStreamReader : IStreamReader
     {
-        private readonly int bufferSize = 6 * 1024 * 1024;
+        private readonly int bufferSize = 512 * 1024;
         private readonly byte[] gzipHeader = {31, 139, 8, 0, 0, 0, 0, 0, 4, 0};
-        private byte[] temp = new byte[0];
+        private readonly List<byte> temp = new List<byte>();
 
         public GzipStreamReader()
         {
@@ -24,106 +25,68 @@ namespace GzipCompressor
 
         public void Read(Stream source, BoundedBlockingQueue<byte[]> target)
         {
-            temp = new byte[0];
+            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             while (true)
             {
-                var buffers = ReadInternal(source, out var readBytes);
+                
+                var buffer = ReadInternal(source, out var readBytes);
                 if (readBytes == 0) break;
-
-                foreach (var buffer in buffers) target.Add(buffer);
+                if (buffer.Length == 0) continue;
+                target.Add(buffer);
+                logger.Debug($"Read bytes {buffer.Length}");
             }
-            target.Add(temp);
+
+            if (temp.Count != 0)
+            {
+                target.Add(temp.ToArray());
+                logger.Debug($"Read bytes (temp) {temp.Count}");
+            }
         }
 
-        private byte[][] ReadInternal(Stream source, out int readBytes)
+        private byte[] ReadInternal(Stream source, out int readBytes)
         {
             var buffer = new byte[bufferSize];
             readBytes = source.Read(buffer, 0, buffer.Length);
+            if (readBytes == 0) return new byte[] { };
+            if (readBytes == source.Length) return buffer;
             if (readBytes < bufferSize) Array.Resize(ref buffer, readBytes);
 
-            var indexes = StartingIndexes(buffer, gzipHeader).ToList();
+
+            var indexes = buffer.FindStartingIndexes(gzipHeader).ToList();
             if (!indexes.Any())
             {
-                var newSize = temp.Length + buffer.Length;
-                Array.Resize(ref temp, newSize);
-                buffer.CopyTo(temp, 0);
-                return new byte[][] { };
+                CopyToList(buffer, temp, buffer.Length, 0);
+                return new byte[] { };
             }
 
-            
-            return indexes.Select((currentIndex, i) =>
-            {
-                if (indexes.Count == i + 1)
-                {
-                    temp = new byte[buffer.Length - currentIndex];
-                    Array.Copy(buffer, currentIndex, temp, 0, temp.Length);
-                    return null;
-                }
-
-                var nextIndex = indexes[i + 1];
-                var toCopyCount = nextIndex - currentIndex;
-                var result = new byte[temp.Length + toCopyCount];
-                if (temp.Length != 0)
-                {
-                    Array.Copy(temp, 0, result, 0, temp.Length);
-                    Array.Clear(temp, 0, 0);
-                }
-
-                Array.Copy(buffer, currentIndex, result, temp.Length, toCopyCount);
-                
-                return result;
-            }).Where(bytes => bytes != null).ToArray();
+            var lastIndex = indexes.Last();
+            var result = InitResult(lastIndex);
+            CopyToList(buffer, result, lastIndex);
+            CopyToList(buffer, temp, buffer.Length - lastIndex, lastIndex);
+            return result.ToArray();
         }
 
-        private static IEnumerable<int> StartingIndexes(byte[] array, byte[] subArray)
+        private List<byte> InitResult(int lastIndex)
         {
-            var result = new List<int>();
-            var position = 0;
-            while (true)
+            List<byte> result;
+            if (temp.Count != 0)
             {
-                var index = StartingIndex(array, subArray, position);
-                switch (index)
-                {
-                    case -1:
-                        return result;
-                    case -2:
-                        position++;
-                        break;
-                    default:
-                        result.Add(index);
-                        position = index + subArray.Length;
-                        break;
-                }
+                result = new List<byte>(temp);
+                temp.Clear();
             }
+            else
+            {
+                result = new List<byte>(lastIndex);
+            }
+
+            return result;
         }
-        
-        private static int StartingIndex(byte[] array, byte[] subArray, int position)
+
+        private void CopyToList(byte[] buffer, List<byte> dest, int length, int offset = 0)
         {
-            var index = Array.FindIndex(array, position, b => b == subArray[0]);
-            if (index == -1)
-            {
-                return -1;
-            }
-
-            if (array.Length - index < subArray.Length)
-            {
-                return -1;
-            }
-
-            bool Check()
-            {
-                for (var i = 1; i < subArray.Length; i++)
-                {
-                    if (array[index + i] != subArray[i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return Check() ? index : -2;
+            var array = new byte[length];
+            Array.Copy(buffer, offset, array, 0, length);
+            dest.AddRange(array);
         }
     }
 }

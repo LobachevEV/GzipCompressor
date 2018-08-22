@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
 
 namespace GzipCompressor.AdvanceCopier
 {
@@ -38,7 +37,6 @@ namespace GzipCompressor.AdvanceCopier
                 return;
 
             target.Write(buffer.Data, 0, buffer.Data.Length);
-            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug($"Writed buffer {buffer.Index}");
             target.Flush();
             GC.Collect();
         }
