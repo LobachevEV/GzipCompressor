@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Configuration;
-using System.Diagnostics;
 using System.IO;
 using System.Timers;
-using GzipCompressor.AdvanceCopier;
-using GzipCompressor.BL;
 using GzipComressor.Infrastructure;
 using GzipComressor.Infrastructure.Logging;
 
@@ -25,14 +22,14 @@ namespace GzipCompressor
 
 
             Console.WriteLine($"Start {mode.ToLowerInvariant()}ing file {sourceFilePath}");
+            var progressBar = new AnimatedBar();
             using (var timer = new Timer {Interval = 500})
             {
-                timer.Elapsed += (sender, eventArgs) => Console.Write(".");
+                timer.Elapsed += (sender, eventArgs) => progressBar.Step();
                 timer.Start();
                 var compressor = new GzipCompressorFactory(logger, new WorkerScheduler(16, logger)).Get(mode);
-                var time = StopwatchHelper.Time(() => compressor.Copy(sourceFilePath, targetFilePath), logger);
+                var time = StopwatchHelper.Time(() => compressor.Execute(sourceFilePath, targetFilePath), logger);
                 timer.Stop();
-                Console.WriteLine();
                 Console.WriteLine($"{mode.ToLowerInvariant()}ing finished in {time}");
             }
 
@@ -55,53 +52,6 @@ namespace GzipCompressor
             Console.WriteLine("Press Enter to continue");
             Console.ReadLine();
             Environment.Exit(1);
-        }
-    }
-
-    public class GzipCompressorFactory
-    {
-        private readonly Logger logger;
-        private readonly WorkerScheduler workerScheduler;
-
-        public GzipCompressorFactory(Logger logger, WorkerScheduler workerScheduler)
-        {
-            this.logger = logger;
-            this.workerScheduler = workerScheduler;
-        }
-
-        public FileAdvanceCopier Get(string mode)
-        {
-            var processor = GetProcessor(mode);
-            var reader = GetReader(mode);
-            return new FileAdvanceCopier(reader, processor, new OrderingWriter(logger), logger);
-        }
-
-        private IProcessor GetProcessor(string mode)
-        {
-            switch (mode.ToLowerInvariant())
-            {
-                case "compress":
-                    return new Compressor(workerScheduler, logger);
-                case "decompress":
-                    return new Decompressor(workerScheduler, logger);
-                default:
-                    throw new ArgumentException(
-                        "The mode is incorrect. Please choose one of the following options: compress, decompress.");
-            }
-        }
-
-        private IStreamReader GetReader(string mode)
-        {
-            switch (mode.ToLowerInvariant())
-            {
-                case "compress":
-                    return new DefaultStreamReader();
-                case "decompress":
-                    return new GzipStreamReader();
-                default:
-                    throw new ArgumentException(
-                        "The mode is incorrect. Please choose one of the following options: compress, decompress.");
-            }
         }
     }
 }

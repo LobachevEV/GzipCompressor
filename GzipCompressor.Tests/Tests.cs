@@ -20,6 +20,7 @@ namespace GzipCompressor.Tests
             LogSettings.LogLevel = LogLevel.Debug;
         }
 
+        // ReSharper disable once InconsistentNaming
         private static string CalculateMD5(string filename)
         {
             using (var md5 = MD5.Create())
@@ -32,37 +33,33 @@ namespace GzipCompressor.Tests
             }
         }
 
-        [Test]
-        [TestCase(@"SampleCSVFile_53000kb.csv")]
-        [TestCase(@"SampleXLSFile_6800kb.xls")]
-        [TestCase(@"test1Gb.db")]
+        private const string DirPath = @"D:\Repos\GzipCompressor\GzipCompressor.Tests\Assets\";
+        private const string Sample1 = "SampleCSVFile_53000kb.csv";
+        private const string Sample2 = "SampleXLSFile_6800kb.xls";
+        
+        [TestCase(Sample1)]
+        [TestCase(Sample2)]
         public void CountHash_Compress_Decompress_CheckHash(string fileName)
         {
-            const string dirPath = @"D:\Repos\GzipCompressor\GzipCompressor.Tests\Assets\";
-            var sourceFilePath = Path.Combine(dirPath, fileName);
+            var sourceFilePath = Path.Combine(DirPath, fileName);
             if (!File.Exists(sourceFilePath)) Assert.Fail("File does not exests");
 
-            var compressedFilePath = Path.Combine(dirPath, "compressed.gz");
+            var compressedFilePath = Path.Combine(DirPath, "compressed.gz");
             if (File.Exists(compressedFilePath)) File.Delete(compressedFilePath);
 
             var expected = CalculateMD5(sourceFilePath);
              
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
-            var compressor = new BL.Compressor(new WorkerScheduler(16, logger), logger);
-            var defaultReader = new DefaultStreamReader();
-            new FileAdvanceCopier(defaultReader, compressor, new OrderingWriter(logger), logger).Copy(sourceFilePath,
-                compressedFilePath);
+            var workerScheduler = new WorkerScheduler(16, logger);
+            var gzipCompressorFactory = new GzipCompressorFactory(logger, workerScheduler);
+            gzipCompressorFactory.Get("compress").Execute(sourceFilePath, compressedFilePath);
 
 
-            var decompressedFilePath = Path.Combine(dirPath, $"decompressed{fileName}");
-            var decompressor = new Decompressor(new WorkerScheduler(16, logger), logger);
-            var gzipReader = new DefaultStreamReader();
-            new FileAdvanceCopier(gzipReader, decompressor, new OrderingWriter(logger), logger).Copy(compressedFilePath,
+            var decompressedFilePath = Path.Combine(DirPath, $"decompressed{fileName}");
+            gzipCompressorFactory.Get("decompress").Execute(compressedFilePath,
                 decompressedFilePath);
             var actual = CalculateMD5(decompressedFilePath);
             Assert.AreEqual(expected, actual);
-            File.Delete(compressedFilePath);
-            File.Delete(decompressedFilePath);
         }
 
         [Test]
@@ -71,64 +68,28 @@ namespace GzipCompressor.Tests
             byte[] array = {0x1A, 0x65, 0x3E, 0x00, 0x01, 0x00, 0x4C, 0xAA, 0x00, 0x01};
             byte[] subArray = {0x00, 0x01};
 
-            var actual = StartingIndex(array, subArray).ToArray();
+            var actual = array.FindStartingIndexes(subArray);
             var expected = new[] {3, 8};
             CollectionAssert.AreEqual(expected, actual);
         }
 
-
-        public static IEnumerable<int> StartingIndex(byte[] array, byte[] subArray)
+        [TearDown]
+        public void Clear()
         {
-            var result = new List<int>();
-            var position = 0;
-            while (true)
-            {
-                var index = StartingIndex(array, subArray, position);
-                if (index == -1)
-                {
-                    return result;
-                }
-
-                if (index != -2)
-                {
-                    result.Add(index);
-                    position = index + subArray.Length;
-                }
-                else
-                {
-                    position += subArray.Length;
-                }
-
-            }
+            var decompressedSample1FilePath = Path.Combine(DirPath, $"decompressed{Sample1}");
+            DeleteIfExists(decompressedSample1FilePath);
+            var decompressedSample2FilePath = Path.Combine(DirPath, $"decompressed{Sample2}");
+            DeleteIfExists(decompressedSample2FilePath);
+            var compressedFilePath = Path.Combine(DirPath, "compressed.gz");
+            DeleteIfExists(compressedFilePath);
         }
 
-        private static int StartingIndex(byte[] array, byte[] subArray, int position)
+        private static void DeleteIfExists(string decompressedSample1FilePath)
         {
-            var index = Array.FindIndex(array, position, b => b == subArray[0]);
-            if (index == -1)
+            if (File.Exists(decompressedSample1FilePath))
             {
-                return -1;
+                File.Delete(decompressedSample1FilePath);
             }
-
-            if (array.Length - index < subArray.Length)
-            {
-                return -1;
-            }
-
-            bool Check()
-            {
-                for (var i = 1; i < subArray.Length; i++)
-                {
-                    if (array[index + i] != subArray[i])
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return Check() ? index : -2;
         }
     }
 }
