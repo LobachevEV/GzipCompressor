@@ -48,8 +48,7 @@ namespace GzipComressor.Infrastructure.Logging
 
         private T CreateLogger<T>(Type type) where T : Logger
         {
-            var logger = (T) Activator.CreateInstance(type);
-            logger.MinimumLogLevel = logLevel;
+            var logger = (T) Activator.CreateInstance(type, logLevel);
             loggers.Add(typeof(T), logger);
             return logger;
         }

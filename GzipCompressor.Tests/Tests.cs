@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using GzipCompressor.AdvanceCopier;
+using GzipCompressor.BL;
 using GzipComressor.Infrastructure;
 using GzipComressor.Infrastructure.Logging;
 using NUnit.Framework;
@@ -34,6 +35,7 @@ namespace GzipCompressor.Tests
         [Test]
         [TestCase(@"SampleCSVFile_53000kb.csv")]
         [TestCase(@"SampleXLSFile_6800kb.xls")]
+        [TestCase(@"test1Gb.db")]
         public void CountHash_Compress_Decompress_CheckHash(string fileName)
         {
             const string dirPath = @"D:\Repos\GzipCompressor\GzipCompressor.Tests\Assets\";
@@ -44,21 +46,23 @@ namespace GzipCompressor.Tests
             if (File.Exists(compressedFilePath)) File.Delete(compressedFilePath);
 
             var expected = CalculateMD5(sourceFilePath);
-            var compressor = new GzipCompressor(new WorkerScheduler(16, null), null);
-            var defaultReader = new DefaultStreamReader();
+             
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
-            new FileAdvanceCopier(defaultReader, compressor, new OrderingWriter(), logger).Copy(sourceFilePath,
+            var compressor = new BL.Compressor(new WorkerScheduler(16, logger), logger);
+            var defaultReader = new DefaultStreamReader();
+            new FileAdvanceCopier(defaultReader, compressor, new OrderingWriter(logger), logger).Copy(sourceFilePath,
                 compressedFilePath);
 
 
             var decompressedFilePath = Path.Combine(dirPath, $"decompressed{fileName}");
-            var decompressor = new GzipDecompressor(new WorkerScheduler(16, null), null);
+            var decompressor = new Decompressor(new WorkerScheduler(16, logger), logger);
             var gzipReader = new DefaultStreamReader();
-            new FileAdvanceCopier(gzipReader, decompressor, new OrderingWriter(), logger).Copy(compressedFilePath,
+            new FileAdvanceCopier(gzipReader, decompressor, new OrderingWriter(logger), logger).Copy(compressedFilePath,
                 decompressedFilePath);
             var actual = CalculateMD5(decompressedFilePath);
             Assert.AreEqual(expected, actual);
             File.Delete(compressedFilePath);
+            File.Delete(decompressedFilePath);
         }
 
         [Test]

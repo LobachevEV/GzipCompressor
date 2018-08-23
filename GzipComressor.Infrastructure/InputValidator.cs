@@ -9,13 +9,13 @@ namespace GzipComressor.Infrastructure
     {
         public static void Validate(string[] args)
         {
-            CheckInputArguments(args);
+            EnshureArgumentsCorrect(args);
             var sourceFilePath = args[1];
             if (!File.Exists(sourceFilePath))
                 throw new FileNotFoundException(sourceFilePath);
         }
 
-        private static void CheckInputArguments(IEnumerable<string> args)
+        private static void EnshureArgumentsCorrect(IEnumerable<string> args)
         {
             var exceptions = new List<Exception>();
             const string message = "No required argument";

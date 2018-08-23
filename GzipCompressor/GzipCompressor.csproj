@@ -33,15 +33,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArrayExtentions.cs" />
-    <Compile Include="GzipCompressor.cs" />
-    <Compile Include="GzipDecompressor.cs" />
-    <Compile Include="GzipStreamReader.cs" />
+    <Compile Include="BL\Compressor.cs" />
+    <Compile Include="BL\Decompressor.cs" />
+    <Compile Include="BL\GzipStreamReader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StreamExtensions.cs" />
@@ -55,6 +55,9 @@
       <Project>{66802535-d2db-4197-894e-1aa8d0eaa636}</Project>
       <Name>GzipComressor.Infrastructure</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

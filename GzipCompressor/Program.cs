@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
+using System.Timers;
 using GzipCompressor.AdvanceCopier;
+using GzipCompressor.BL;
 using GzipComressor.Infrastructure;
 using GzipComressor.Infrastructure.Logging;
 
@@ -15,34 +19,78 @@ namespace GzipCompressor
             var mode = args[0];
             var sourceFilePath = args[1];
             var targetFilePath = args[2];
-            LogSettings.LogLevel = GetLogLevel(args);
-            var logManager = LogFactory.GetInstance();
-            var logger = logManager.GetLogger<ConsoleLogger>();
+            LogSettings.LogLevel = GetLogLevel();
+            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             if (File.Exists(targetFilePath)) File.Delete(targetFilePath);
 
-            var processor = GetProcessor(mode);
-            var reader = GetReader(mode);
-            var fileAdvanceCopier = new FileAdvanceCopier(reader, processor, new OrderingWriter(), logger);
-            StopwatchHelper.Time(() => fileAdvanceCopier.Copy(sourceFilePath, targetFilePath), logger);
+
+            Console.WriteLine($"Start {mode.ToLowerInvariant()}ing file {sourceFilePath}");
+            using (var timer = new Timer {Interval = 500})
+            {
+                timer.Elapsed += (sender, eventArgs) => Console.Write(".");
+                timer.Start();
+                var compressor = new GzipCompressorFactory(logger, new WorkerScheduler(16, logger)).Get(mode);
+                var time = StopwatchHelper.Time(() => compressor.Copy(sourceFilePath, targetFilePath), logger);
+                timer.Stop();
+                Console.WriteLine();
+                Console.WriteLine($"{mode.ToLowerInvariant()}ing finished in {time}");
+            }
+
+            Console.WriteLine("Press Enter to continue");
+            Console.ReadLine();
         }
 
-        private static IProcessor GetProcessor(string mode)
+        private static LogLevel GetLogLevel()
+        {
+            var strLogLevel = ConfigurationManager.AppSettings["BatchFile"];
+            return !string.IsNullOrEmpty(strLogLevel)
+                ? (LogLevel) Enum.Parse(typeof(LogLevel), strLogLevel)
+                : LogLevel.Info;
+        }
+
+        private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
         {
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
-            var scheduler = new WorkerScheduler(Environment.ProcessorCount * 2, logger);
+            logger.Error(e.ExceptionObject.ToString());
+            Console.WriteLine("Press Enter to continue");
+            Console.ReadLine();
+            Environment.Exit(1);
+        }
+    }
+
+    public class GzipCompressorFactory
+    {
+        private readonly Logger logger;
+        private readonly WorkerScheduler workerScheduler;
+
+        public GzipCompressorFactory(Logger logger, WorkerScheduler workerScheduler)
+        {
+            this.logger = logger;
+            this.workerScheduler = workerScheduler;
+        }
+
+        public FileAdvanceCopier Get(string mode)
+        {
+            var processor = GetProcessor(mode);
+            var reader = GetReader(mode);
+            return new FileAdvanceCopier(reader, processor, new OrderingWriter(logger), logger);
+        }
+
+        private IProcessor GetProcessor(string mode)
+        {
             switch (mode.ToLowerInvariant())
             {
                 case "compress":
-                    return new GzipCompressor(scheduler, logger);
+                    return new Compressor(workerScheduler, logger);
                 case "decompress":
-                    return new GzipDecompressor(scheduler, logger);
+                    return new Decompressor(workerScheduler, logger);
                 default:
                     throw new ArgumentException(
                         "The mode is incorrect. Please choose one of the following options: compress, decompress.");
             }
         }
 
-        private static IStreamReader GetReader(string mode)
+        private IStreamReader GetReader(string mode)
         {
             switch (mode.ToLowerInvariant())
             {
@@ -54,23 +102,6 @@ namespace GzipCompressor
                     throw new ArgumentException(
                         "The mode is incorrect. Please choose one of the following options: compress, decompress.");
             }
-        }
-
-        private static LogLevel GetLogLevel(string[] args)
-        {
-            for (var i = 0; i < args.Length; i++)
-                if (args[i].Equals("-l", StringComparison.InvariantCulture) && i + 1 < args.Length)
-                    return (LogLevel) Enum.Parse(typeof(LogLevel), args[i + 1]);
-            return LogLevel.Info;
-        }
-
-        private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
-        {
-            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
-            logger.Error(e.ExceptionObject.ToString());
-            Console.WriteLine("Press Enter to continue");
-            Console.ReadLine();
-            Environment.Exit(1);
         }
     }
 }

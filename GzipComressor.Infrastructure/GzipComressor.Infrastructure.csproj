@@ -39,9 +39,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AggregateException.cs" />
+    <Compile Include="ArrayExtentions.cs" />
     <Compile Include="BoundedBlockingQueue.cs" />
-    <Compile Include="ConsoleLogger.cs" />
     <Compile Include="InputValidator.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\LogFactory.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LogLevel.cs" />

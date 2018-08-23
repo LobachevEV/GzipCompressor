@@ -2,26 +2,31 @@
 {
     public abstract class Logger
     {
+        private readonly LogLevel minimumLogLevel;
+
         protected Logger()
         {
-            MinimumLogLevel = LogLevel.Info;
+            minimumLogLevel = LogLevel.Info;
         }
 
-        public LogLevel MinimumLogLevel { get; set; }
+        protected Logger(LogLevel level)
+        {
+            minimumLogLevel = level;
+        }
 
         public void Info(string message)
         {
-            if (MinimumLogLevel <= LogLevel.Info) Log(LogLevel.Info.ToString(), message);
+            if (minimumLogLevel <= LogLevel.Info) Log(LogLevel.Info.ToString(), message);
         }
 
         public void Debug(string message)
         {
-            if (MinimumLogLevel <= LogLevel.Debug) Log(LogLevel.Debug.ToString(), message);
+            if (minimumLogLevel <= LogLevel.Debug) Log(LogLevel.Debug.ToString(), message);
         }
 
         public void Error(string message)
         {
-            if (MinimumLogLevel <= LogLevel.Error) Log(LogLevel.Error.ToString(), message);
+            if (minimumLogLevel <= LogLevel.Error) Log(LogLevel.Error.ToString(), message);
         }
 
         protected abstract void Log(string level, string message);

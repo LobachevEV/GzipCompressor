@@ -2,13 +2,22 @@
 using System.Collections.Generic;
 using System.IO;
 using GzipComressor.Infrastructure;
+using GzipComressor.Infrastructure.Logging;
 
 namespace GzipCompressor.AdvanceCopier
 {
     public class OrderingWriter : IQueueToStreamWriter<IndexedBuffer>
     {
+        private readonly Logger logger;
+
+        public OrderingWriter(Logger logger)
+        {
+            this.logger = logger;
+        }
+
         public void Write(BoundedBlockingQueue<IndexedBuffer> source, Stream target)
         {
+            logger.Debug("Writing started");
             var awaitDict = new Dictionary<int, IndexedBuffer>();
             var currentIndex = 0;
             foreach (var buffer in source.Consume())
@@ -33,12 +42,14 @@ namespace GzipCompressor.AdvanceCopier
         
         private void WriteInternal(IndexedBuffer buffer, Stream target)
         {
-            if (buffer.Data.Length == 0)
+            var dataLength = buffer.Data.Length;
+            if (dataLength == 0)
                 return;
 
-            target.Write(buffer.Data, 0, buffer.Data.Length);
+            target.Write(buffer.Data, 0, dataLength);
             target.Flush();
             GC.Collect();
+            logger.Debug($"Writed {buffer.Index} buffer {dataLength} bytes");
         }
     }
 }
