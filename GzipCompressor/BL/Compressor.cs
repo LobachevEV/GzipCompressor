@@ -1,39 +1,18 @@
 ﻿using System.IO;
 using System.IO.Compression;
 using GzipCompressor.AdvanceCopier;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.BL
 {
-    public class Compressor : IProcessor
+    public class Compressor : ParallelProcessor
     {
-        private readonly Logger logger;
-        private readonly WorkerScheduler scheduler;
-
-        public Compressor(WorkerScheduler scheduler, Logger logger)
+        public Compressor(WorkerScheduler scheduler, Logger logger) : base(scheduler, logger)
         {
-            this.scheduler = scheduler;
-            this.logger = logger;
         }
 
-        public void Process(BoundedBlockingQueue<byte[]> source, BoundedBlockingQueue<IndexedBuffer> target)
-        {
-            var i = 0;
-            foreach (var buffer in source.Consume())
-            {
-                var indexedBuffer = new IndexedBuffer(i);
-                i++;
-                scheduler.StartNew(() =>
-                {
-                    indexedBuffer.Data = Compress(buffer);
-                    target.Add(indexedBuffer);
-                });
-            }
-            scheduler.WaitAll();
-        }
-
-        private byte[] Compress(byte[] buffer)
+        protected override byte[] ProcessInternal(byte[] buffer)
         {
             using (var bufferStream = new MemoryStream())
             {

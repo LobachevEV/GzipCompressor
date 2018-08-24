@@ -1,4 +1,4 @@
-﻿using GzipComressor.Infrastructure;
+﻿using GzipCompressor.Infrastructure;
 
 namespace GzipCompressor.AdvanceCopier
 {

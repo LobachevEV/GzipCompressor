@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.AdvanceCopier
 {
@@ -49,7 +49,7 @@ namespace GzipCompressor.AdvanceCopier
             target.Write(buffer.Data, 0, dataLength);
             target.Flush();
             GC.Collect();
-            logger.Debug($"Writed {buffer.Index} buffer {dataLength} bytes");
+            logger.Debug($"Written {buffer.Index} buffer {dataLength} bytes");
         }
     }
 }

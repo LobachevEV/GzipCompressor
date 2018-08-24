@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.AdvanceCopier
 {

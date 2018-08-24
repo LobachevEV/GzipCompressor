@@ -2,8 +2,8 @@
 using System.Configuration;
 using System.IO;
 using System.Timers;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor
 {

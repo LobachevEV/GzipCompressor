@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using GzipCompressor.AdvanceCopier;
-using GzipComressor.Infrastructure.Logging;
 
 namespace GzipCompressor.BL
 {

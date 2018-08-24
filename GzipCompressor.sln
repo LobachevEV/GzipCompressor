@@ -4,9 +4,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GzipCompressor", "GzipCompr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GzipCompressor.Tests", "GzipCompressor.Tests\GzipCompressor.Tests.csproj", "{C25A94F4-6398-4536-A17F-816FD39CC4B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GzipComressor.Infrastructure", "GzipComressor.Infrastructure\GzipComressor.Infrastructure.csproj", "{66802535-D2DB-4197-894E-1AA8D0EAA636}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GzipCompressor.AdvanceCopier", "GzipCompressor.AdvanceCopier\GzipCompressor.AdvanceCopier.csproj", "{C4CECD68-98E2-4262-90D6-A35CD0FDF297}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GzipCompressor.Infrastructure", "GzipCompressor.Infrastructure\GzipCompressor.Infrastructure.csproj", "{66802535-D2DB-4197-894E-1AA8D0EAA636}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,13 +22,13 @@ Global
 		{C25A94F4-6398-4536-A17F-816FD39CC4B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C25A94F4-6398-4536-A17F-816FD39CC4B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C25A94F4-6398-4536-A17F-816FD39CC4B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C4CECD68-98E2-4262-90D6-A35CD0FDF297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C4CECD68-98E2-4262-90D6-A35CD0FDF297}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4CECD68-98E2-4262-90D6-A35CD0FDF297}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4CECD68-98E2-4262-90D6-A35CD0FDF297}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66802535-D2DB-4197-894E-1AA8D0EAA636}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

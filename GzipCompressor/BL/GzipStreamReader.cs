@@ -3,29 +3,30 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using GzipCompressor.AdvanceCopier;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.BL
 {
     public class GzipStreamReader : IStreamReader
     {
         private readonly int bufferSize = 512 * 1024;
-        private readonly byte[] gzipHeader = {31, 139, 8, 0, 0, 0, 0, 0, 4, 0};
         private readonly List<byte> temp = new List<byte>();
+        private readonly Logger logger;
 
-        public GzipStreamReader()
+        public GzipStreamReader(Logger logger)
         {
+            this.logger = logger;
         }
 
-        public GzipStreamReader(int bufferSize)
+        public GzipStreamReader(int bufferSize, Logger logger)
         {
             this.bufferSize = bufferSize;
+            this.logger = logger;
         }
 
         public void Read(Stream source, BoundedBlockingQueue<byte[]> target)
         {
-            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             while (true)
             {
                 
@@ -52,7 +53,7 @@ namespace GzipCompressor.BL
             if (readBytes < bufferSize) Array.Resize(ref buffer, readBytes);
 
 
-            var indexes = buffer.FindStartingIndexes(gzipHeader).ToList();
+            var indexes = buffer.FindStartingIndexes(GzipConstants.Header).ToList();
             if (!indexes.Any())
             {
                 CopyToList(buffer, temp, buffer.Length, 0);

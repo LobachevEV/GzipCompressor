@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using GzipComressor.Infrastructure;
+using GzipCompressor.Infrastructure;
 
 namespace GzipCompressor.AdvanceCopier
 {
@@ -22,10 +22,10 @@ namespace GzipCompressor.AdvanceCopier
             while (true)
             {
                 var buffer = new byte[bufferSize];
-                var readedBytes = source.Read(buffer, 0, buffer.Length);
-                if (readedBytes == 0) break;
+                var readBytes = source.Read(buffer, 0, buffer.Length);
+                if (readBytes == 0) break;
 
-                if (readedBytes < bufferSize) Array.Resize(ref buffer, readedBytes);
+                if (readBytes < bufferSize) Array.Resize(ref buffer, readBytes);
                 target.Add(buffer);
             }
         }

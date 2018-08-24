@@ -1,8 +1,8 @@
 ﻿using System;
 using GzipCompressor.AdvanceCopier;
 using GzipCompressor.BL;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor
 {
@@ -29,9 +29,9 @@ namespace GzipCompressor
         {
             switch (mode.ToLowerInvariant())
             {
-                case "compress":
+                case GzipConstants.Compress:
                     return new Compressor(workerScheduler, logger);
-                case "decompress":
+                case GzipConstants.Decompress:
                     return new Decompressor(workerScheduler, logger);
                 default:
                     throw new ArgumentException(
@@ -43,10 +43,10 @@ namespace GzipCompressor
         {
             switch (mode.ToLowerInvariant())
             {
-                case "compress":
+                case GzipConstants.Compress:
                     return new DefaultStreamReader();
-                case "decompress":
-                    return new GzipStreamReader();
+                case GzipConstants.Decompress:
+                    return new GzipStreamReader(logger);
                 default:
                     throw new ArgumentException(
                         "The mode is incorrect. Please choose one of the following options: compress, decompress.");

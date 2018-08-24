@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using GzipComressor.Infrastructure;
+using GzipCompressor.Infrastructure;
 
 namespace GzipCompressor.AdvanceCopier
 {

@@ -44,7 +44,9 @@
     <Compile Include="BL\Decompressor.cs" />
     <Compile Include="BL\GzipCompressor.cs" />
     <Compile Include="BL\GzipStreamReader.cs" />
+    <Compile Include="BL\ParallelProcessor.cs" />
     <Compile Include="GzipCompressorFactory.cs" />
+    <Compile Include="GzipConstants.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

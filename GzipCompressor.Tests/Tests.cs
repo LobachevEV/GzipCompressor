@@ -5,8 +5,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using GzipCompressor.AdvanceCopier;
 using GzipCompressor.BL;
-using GzipComressor.Infrastructure;
-using GzipComressor.Infrastructure.Logging;
+using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
@@ -42,7 +42,7 @@ namespace GzipCompressor.Tests
         public void CountHash_Compress_Decompress_CheckHash(string fileName)
         {
             var sourceFilePath = Path.Combine(DirPath, fileName);
-            if (!File.Exists(sourceFilePath)) Assert.Fail("File does not exests");
+            if (!File.Exists(sourceFilePath)) Assert.Fail("File does not exists");
 
             var compressedFilePath = Path.Combine(DirPath, "compressed.gz");
             if (File.Exists(compressedFilePath)) File.Delete(compressedFilePath);
@@ -52,11 +52,11 @@ namespace GzipCompressor.Tests
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             var workerScheduler = new WorkerScheduler(16, logger);
             var gzipCompressorFactory = new GzipCompressorFactory(logger, workerScheduler);
-            gzipCompressorFactory.Get("compress").Execute(sourceFilePath, compressedFilePath);
+            gzipCompressorFactory.Get(GzipConstants.Compress).Execute(sourceFilePath, compressedFilePath);
 
 
             var decompressedFilePath = Path.Combine(DirPath, $"decompressed{fileName}");
-            gzipCompressorFactory.Get("decompress").Execute(compressedFilePath,
+            gzipCompressorFactory.Get(GzipConstants.Decompress).Execute(compressedFilePath,
                 decompressedFilePath);
             var actual = CalculateMD5(decompressedFilePath);
             Assert.AreEqual(expected, actual);
