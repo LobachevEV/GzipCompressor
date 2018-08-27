@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.IO.Compression;
-using GzipCompressor.AdvanceCopier;
 using GzipCompressor.Infrastructure;
 using GzipCompressor.Infrastructure.Logging;
 

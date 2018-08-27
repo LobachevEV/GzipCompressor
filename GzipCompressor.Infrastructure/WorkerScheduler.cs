@@ -9,6 +9,7 @@ namespace GzipCompressor.Infrastructure
         private readonly Logger logger;
         private readonly int maxCount;
         private int threadsCount;
+        private object sync = new object();
 
         public WorkerScheduler(int maxCount, Logger logger)
         {

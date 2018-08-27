@@ -48,9 +48,9 @@
     <Compile Include="StreamAdvanceCopier.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GzipComressor.Infrastructure\GzipComressor.Infrastructure.csproj">
+    <ProjectReference Include="..\GzipCompressor.Infrastructure\GzipCompressor.Infrastructure.csproj">
       <Project>{66802535-d2db-4197-894e-1aa8d0eaa636}</Project>
-      <Name>GzipComressor.Infrastructure</Name>
+      <Name>GzipCompressor.Infrastructure</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

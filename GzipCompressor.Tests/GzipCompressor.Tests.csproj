@@ -52,13 +52,13 @@
       <Project>{c4cecd68-98e2-4262-90d6-a35cd0fdf297}</Project>
       <Name>GzipCompressor.AdvanceCopier</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GzipCompressor.Infrastructure\GzipCompressor.Infrastructure.csproj">
+      <Project>{66802535-d2db-4197-894e-1aa8d0eaa636}</Project>
+      <Name>GzipCompressor.Infrastructure</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GzipCompressor\GzipCompressor.csproj">
       <Project>{8b917355-d40d-48f2-900e-7fd17eb10e6b}</Project>
       <Name>GzipCompressor</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GzipComressor.Infrastructure\GzipComressor.Infrastructure.csproj">
-      <Project>{66802535-d2db-4197-894e-1aa8d0eaa636}</Project>
-      <Name>GzipComressor.Infrastructure</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
