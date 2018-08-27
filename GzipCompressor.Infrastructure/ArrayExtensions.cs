@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GzipComressor.Infrastructure
+namespace GzipCompressor.Infrastructure
 {
-    public static class ArrayExtentions
+    public static class ArrayExtensions
     {
         public static IEnumerable<int> FindStartingIndexes(this byte[] array, byte[] subArray)
         {
