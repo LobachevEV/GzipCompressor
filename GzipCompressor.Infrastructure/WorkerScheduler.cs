@@ -9,7 +9,8 @@ namespace GzipCompressor.Infrastructure
         private readonly Logger logger;
         private readonly int maxCount;
         private int threadsCount;
-        private object sync = new object();
+        private readonly object sync = new object();
+
 
         public WorkerScheduler(int maxCount, Logger logger)
         {
@@ -20,13 +21,17 @@ namespace GzipCompressor.Infrastructure
         public void StartNew(Action action, Action callBack = null)
         {
             while (threadsCount >= maxCount) Thread.Sleep(100);
+            lock (sync)
+            {
+                while (threadsCount >= maxCount) Thread.Sleep(100);
+                Interlocked.Increment(ref threadsCount);
+            }
 
             new Worker(action, () =>
             {
-                Interlocked.Decrement(ref threadsCount);
                 callBack?.Invoke();
+                Interlocked.Decrement(ref threadsCount);
             }).Start();
-            Interlocked.Increment(ref threadsCount);
         }
 
         public void WaitAll()

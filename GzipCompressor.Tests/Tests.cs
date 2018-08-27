@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
-using GzipCompressor.AdvanceCopier;
-using GzipCompressor.BL;
 using GzipCompressor.Infrastructure;
 using GzipCompressor.Infrastructure.Logging;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace GzipCompressor.Tests
 {
