@@ -1,4 +1,7 @@
-﻿using GzipCompressor.AdvanceCopier;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using GzipCompressor.AdvanceCopier;
 using GzipCompressor.Infrastructure;
 using GzipCompressor.Infrastructure.Logging;
 
@@ -17,20 +20,27 @@ namespace GzipCompressor.BL
 
         public void Process(BoundedBlockingQueue<byte[]> source, BoundedBlockingQueue<IndexedBuffer> target)
         {
+            Logger.Debug("Processing started");
             var i = 0;
+            var waitHandles = new List<WaitHandle>();
             foreach (var buffer in source.Consume())
             {
                 var indexedBuffer = new IndexedBuffer(i);
+                var waitHandle = new ManualResetEvent(false);
                 i++;
                 scheduler.StartNew(() =>
                 {
                     indexedBuffer.Data = ProcessInternal(buffer);
                     target.Add(indexedBuffer);
-                    Logger.Debug($"Processed buffer {indexedBuffer.Index}");
-                });
+                    waitHandle.Set();
+                }, waitHandle: waitHandle);
+                waitHandles.Add(waitHandle);
             }
 
-            scheduler.WaitAll();
+            Logger.Debug($"Consuming finished, wait {waitHandles.Count}");
+
+            WaitHandle.WaitAll(waitHandles.ToArray());
+            target.CompleteAdding();
         }
 
         protected abstract byte[] ProcessInternal(byte[] buffer);

@@ -21,7 +21,9 @@ namespace GzipCompressor
         {
             var processor = GetProcessor(mode);
             var reader = GetReader(mode);
-            var copier = new StreamAdvanceCopier(reader, processor, new OrderingWriter(logger), logger);
+            var copier =
+                new StreamAdvanceCopier(reader, processor, new OrderingWriter(logger), logger,
+                    workerScheduler);
             return new BL.GzipCompressor(copier);
         }
 

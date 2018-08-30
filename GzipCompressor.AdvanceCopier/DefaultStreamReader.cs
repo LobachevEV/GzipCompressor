@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using GzipCompressor.Infrastructure;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.AdvanceCopier
 {
@@ -19,6 +20,7 @@ namespace GzipCompressor.AdvanceCopier
 
         public void Read(Stream source, BoundedBlockingQueue<byte[]> target)
         {
+            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug("Reading started");
             while (true)
             {
                 var buffer = new byte[bufferSize];

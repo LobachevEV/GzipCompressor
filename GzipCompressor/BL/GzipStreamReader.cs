@@ -11,8 +11,8 @@ namespace GzipCompressor.BL
     public class GzipStreamReader : IStreamReader
     {
         private readonly int bufferSize = 512 * 1024;
-        private readonly List<byte> temp = new List<byte>();
         private readonly Logger logger;
+        private readonly List<byte> temp = new List<byte>();
 
         public GzipStreamReader(Logger logger)
         {
@@ -29,7 +29,6 @@ namespace GzipCompressor.BL
         {
             while (true)
             {
-                
                 var buffer = ReadInternal(source, out var readBytes);
                 if (readBytes == 0) break;
                 if (buffer.Length == 0) continue;

@@ -27,7 +27,7 @@ namespace GzipCompressor
             {
                 timer.Elapsed += (sender, eventArgs) => progressBar.Step();
                 timer.Start();
-                var compressor = new GzipCompressorFactory(logger, new WorkerScheduler(16, logger)).Get(mode);
+                var compressor = new GzipCompressorFactory(logger, new WorkerScheduler(Environment.ProcessorCount * 2, logger)).Get(mode);
                 var time = StopwatchHelper.Time(() => compressor.Execute(sourceFilePath, targetFilePath), logger);
                 timer.Stop();
                 Console.WriteLine($"{mode.ToLowerInvariant()}ing finished in {time}");
@@ -39,7 +39,7 @@ namespace GzipCompressor
 
         private static LogLevel GetLogLevel()
         {
-            var strLogLevel = ConfigurationManager.AppSettings["BatchFile"];
+            var strLogLevel = ConfigurationManager.AppSettings["LogLevel"];
             return !string.IsNullOrEmpty(strLogLevel)
                 ? (LogLevel) Enum.Parse(typeof(LogLevel), strLogLevel)
                 : LogLevel.Info;

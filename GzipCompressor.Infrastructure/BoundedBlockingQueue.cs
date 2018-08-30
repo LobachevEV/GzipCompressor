@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.Infrastructure
 {
@@ -23,12 +24,14 @@ namespace GzipCompressor.Infrastructure
         {
             nonEmptyQueueSemaphore.Close();
             nonFullQueueSemaphore.Close();
+            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug($"Queue disposed");
         }
 
         public void CompleteAdding()
         {
-            completeAdding = true;
             nonEmptyQueueSemaphore.Release();
+            completeAdding = true;
+            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug($"Queue complete");
         }
 
         public void Add(T value)

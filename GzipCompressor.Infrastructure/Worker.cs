@@ -1,34 +1,84 @@
 ﻿using System;
 using System.Threading;
+using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.Infrastructure
 {
-    internal class Worker
+    enum WorkerState
     {
-        private readonly Thread thread;
+        Unstarted,
+        Starting,
+        Running,
+        Waiting,
+    }
+    
+    internal class Worker : IDisposable
+    {
+        private readonly AutoResetEvent internalEvent = new AutoResetEvent(false);
+        private Thread thread;
+        private Action mainAction;
+        private volatile bool stopped;
+        private readonly object sync = new object();
+        private volatile WorkerState state = WorkerState.Unstarted;
 
-        public Worker(Action mainAction, Action callBack)
+        public WorkerState State
         {
-            thread = new Thread(() =>
+            get => state;
+            set => state = value;
+        }
+
+        public bool IsWaiting => State == WorkerState.Waiting; 
+
+        public void Dispose()
+        {
+            Stop();
+            ((IDisposable) internalEvent)?.Dispose();
+        }
+
+        public void Start(Action action)
+        {
+            if (State != WorkerState.Waiting && State != WorkerState.Unstarted)
             {
-                mainAction();
-                callBack();
+                throw new Exception("Cannot start started thread");
+            }
+            State = WorkerState.Starting;
+            lock (sync)
+            {
+                mainAction = action;
+            }
+            
+            if (thread == null)
+            {
+                thread = CreateThread();
+                thread.Start();
+            }
+            else
+            {
+                internalEvent.Set();
+            }
+        }
+
+        private Thread CreateThread()
+        {
+            return new Thread(() =>
+            {
+                while (!stopped)
+                {
+                    State = WorkerState.Running;
+                    lock (sync)
+                    {
+                        mainAction?.Invoke();
+                    }
+                    State = WorkerState.Waiting;
+                    internalEvent.WaitOne();
+                }
             });
         }
 
-        public Worker(Action mainAction)
+        private void Stop()
         {
-            thread = new Thread(() => { mainAction(); });
-        }
-
-        public void Start()
-        {
-            thread.Start();
-        }
-
-        public void Join()
-        {
-            thread.Join();
+            stopped = true;
+            internalEvent.Set();
         }
     }
 }

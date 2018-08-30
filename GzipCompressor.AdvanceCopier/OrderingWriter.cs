@@ -39,7 +39,7 @@ namespace GzipCompressor.AdvanceCopier
                 currentIndex++;
             }
         }
-        
+
         private void WriteInternal(IndexedBuffer buffer, Stream target)
         {
             var dataLength = buffer.Data.Length;

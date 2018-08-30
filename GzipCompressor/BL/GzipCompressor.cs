@@ -11,7 +11,7 @@ namespace GzipCompressor.BL
         {
             this.copier = copier;
         }
-        
+
         public void Execute(string sourceFilePath, string targetFilePath)
         {
             using (var source = File.Open(sourceFilePath, FileMode.OpenOrCreate))

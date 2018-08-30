@@ -10,6 +10,17 @@ namespace GzipCompressor.Tests
     [TestFixture]
     public class GzipCompressorTests
     {
+        [TearDown]
+        public void Clear()
+        {
+            var decompressedSample1FilePath = Path.Combine(DirPath, $"decompressed{Sample1}");
+            DeleteIfExists(decompressedSample1FilePath);
+            var decompressedSample2FilePath = Path.Combine(DirPath, $"decompressed{Sample2}");
+            DeleteIfExists(decompressedSample2FilePath);
+            var compressedFilePath = Path.Combine(DirPath, "compressed.gz");
+            DeleteIfExists(compressedFilePath);
+        }
+
         public GzipCompressorTests()
         {
             LogSettings.LogLevel = LogLevel.Debug;
@@ -31,7 +42,7 @@ namespace GzipCompressor.Tests
         private const string DirPath = @"D:\Repos\GzipCompressor\GzipCompressor.Tests\Assets\";
         private const string Sample1 = "SampleCSVFile_53000kb.csv";
         private const string Sample2 = "SampleXLSFile_6800kb.xls";
-        
+
         [TestCase(Sample1)]
         [TestCase(Sample2)]
         public void CountHash_Compress_Decompress_CheckHash(string fileName)
@@ -43,7 +54,7 @@ namespace GzipCompressor.Tests
             if (File.Exists(compressedFilePath)) File.Delete(compressedFilePath);
 
             var expected = CalculateMD5(sourceFilePath);
-             
+
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             var workerScheduler = new WorkerScheduler(16, logger);
             var gzipCompressorFactory = new GzipCompressorFactory(logger, workerScheduler);
@@ -57,6 +68,11 @@ namespace GzipCompressor.Tests
             Assert.AreEqual(expected, actual);
         }
 
+        private static void DeleteIfExists(string decompressedSample1FilePath)
+        {
+            if (File.Exists(decompressedSample1FilePath)) File.Delete(decompressedSample1FilePath);
+        }
+
         [Test]
         public void FindingSubArray()
         {
@@ -66,25 +82,6 @@ namespace GzipCompressor.Tests
             var actual = array.FindStartingIndexes(subArray);
             var expected = new[] {3, 8};
             CollectionAssert.AreEqual(expected, actual);
-        }
-
-        [TearDown]
-        public void Clear()
-        {
-            var decompressedSample1FilePath = Path.Combine(DirPath, $"decompressed{Sample1}");
-            DeleteIfExists(decompressedSample1FilePath);
-            var decompressedSample2FilePath = Path.Combine(DirPath, $"decompressed{Sample2}");
-            DeleteIfExists(decompressedSample2FilePath);
-            var compressedFilePath = Path.Combine(DirPath, "compressed.gz");
-            DeleteIfExists(compressedFilePath);
-        }
-
-        private static void DeleteIfExists(string decompressedSample1FilePath)
-        {
-            if (File.Exists(decompressedSample1FilePath))
-            {
-                File.Delete(decompressedSample1FilePath);
-            }
         }
     }
 }
