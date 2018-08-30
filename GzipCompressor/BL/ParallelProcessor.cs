@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using GzipCompressor.AdvanceCopier;
 using GzipCompressor.Infrastructure;
@@ -26,15 +25,20 @@ namespace GzipCompressor.BL
             foreach (var buffer in source.Consume())
             {
                 var indexedBuffer = new IndexedBuffer(i);
-                var waitHandle = new ManualResetEvent(false);
+                ManualResetEvent waitHandle = null;
+                if (source.AddingCompleted)
+                {
+                    waitHandle = new ManualResetEvent(false);
+                    waitHandles.Add(waitHandle);
+                }
                 i++;
                 scheduler.StartNew(() =>
                 {
                     indexedBuffer.Data = ProcessInternal(buffer);
                     target.Add(indexedBuffer);
-                    waitHandle.Set();
+                    Logger.Debug($"Processed {indexedBuffer.Index}");
+
                 }, waitHandle: waitHandle);
-                waitHandles.Add(waitHandle);
             }
 
             Logger.Debug($"Consuming finished, wait {waitHandles.Count}");

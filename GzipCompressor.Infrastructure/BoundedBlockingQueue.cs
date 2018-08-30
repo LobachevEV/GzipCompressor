@@ -13,7 +13,7 @@ namespace GzipCompressor.Infrastructure
         private readonly Semaphore nonFullQueueSemaphore;
         private readonly Queue<T> queue = new Queue<T>();
 
-        private bool completeAdding;
+        public bool AddingCompleted { get; private set; }
 
         public BoundedBlockingQueue(int boundedCapacity)
         {
@@ -30,7 +30,7 @@ namespace GzipCompressor.Infrastructure
         public void CompleteAdding()
         {
             nonEmptyQueueSemaphore.Release();
-            completeAdding = true;
+            AddingCompleted = true;
             LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug($"Queue complete");
         }
 
@@ -63,7 +63,7 @@ namespace GzipCompressor.Infrastructure
         {
             result = default(T);
 
-            if (!completeAdding)
+            if (!AddingCompleted)
                 try
                 {
                     nonEmptyQueueSemaphore.WaitOne();

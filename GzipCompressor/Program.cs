@@ -27,10 +27,14 @@ namespace GzipCompressor
             {
                 timer.Elapsed += (sender, eventArgs) => progressBar.Step();
                 timer.Start();
-                var compressor = new GzipCompressorFactory(logger, new WorkerScheduler(Environment.ProcessorCount * 2, logger)).Get(mode);
-                var time = StopwatchHelper.Time(() => compressor.Execute(sourceFilePath, targetFilePath), logger);
+                BL.GzipCompressor compressor;
+                using (var workerScheduler = new WorkerScheduler(Math.Max(Environment.ProcessorCount * 2, 4), logger))
+                {
+                    compressor = new GzipCompressorFactory(logger, workerScheduler).Get(mode);
+                    var time = StopwatchHelper.Time(() => compressor.Execute(sourceFilePath, targetFilePath), logger);
+                    Console.WriteLine($"{mode.ToLowerInvariant()}ing finished in {time}");
+                }
                 timer.Stop();
-                Console.WriteLine($"{mode.ToLowerInvariant()}ing finished in {time}");
             }
 
             Console.WriteLine("Press Enter to continue");

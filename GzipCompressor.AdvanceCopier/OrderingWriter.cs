@@ -18,7 +18,6 @@ namespace GzipCompressor.AdvanceCopier
         public void Write(BoundedBlockingQueue<IndexedBuffer> source, Stream target)
         {
             logger.Debug("Writing started");
-            var awaitDict = new Dictionary<int, IndexedBuffer>();
             var currentIndex = 0;
             foreach (var buffer in source.Consume())
             {
@@ -30,13 +29,7 @@ namespace GzipCompressor.AdvanceCopier
                     continue;
                 }
 
-                if (bufferIndex > currentIndex) awaitDict[bufferIndex] = buffer;
-            }
-
-            while (awaitDict.ContainsKey(currentIndex))
-            {
-                WriteInternal(awaitDict[currentIndex], target);
-                currentIndex++;
+                if (bufferIndex > currentIndex) source.Add(buffer);
             }
         }
 
