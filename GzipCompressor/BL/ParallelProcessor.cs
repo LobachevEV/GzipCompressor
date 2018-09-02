@@ -20,33 +20,58 @@ namespace GzipCompressor.BL
         public void Process(BoundedBlockingQueue<byte[]> source, BoundedBlockingQueue<IndexedBuffer> target)
         {
             Logger.Debug("Processing started");
-            var i = 0;
-            var waitHandles = new List<WaitHandle>();
+            var bufferFactory = new IndexedBufferFactory();
+            var waitHandlesHelper = new EventWaitHandlesHelper();
             foreach (var buffer in source.Consume())
             {
-                var indexedBuffer = new IndexedBuffer(i);
-                ManualResetEvent waitHandle = null;
-                if (source.AddingCompleted)
-                {
-                    waitHandle = new ManualResetEvent(false);
-                    waitHandles.Add(waitHandle);
-                }
-                i++;
+                var waitHandle = source.AddingCompleted ? waitHandlesHelper.GetNew() : null;
+                var indexedBuffer = bufferFactory.GetNext();
                 scheduler.StartNew(() =>
                 {
                     indexedBuffer.Data = ProcessInternal(buffer);
                     target.Add(indexedBuffer);
                     Logger.Debug($"Processed {indexedBuffer.Index}");
-
-                }, waitHandle: waitHandle);
+                }, waitHandle);
             }
 
-            Logger.Debug($"Consuming finished, wait {waitHandles.Count}");
-
-            WaitHandle.WaitAll(waitHandles.ToArray());
+            Logger.Debug("Consuming finished");
+            waitHandlesHelper.WaitAll();
             target.CompleteAdding();
         }
 
         protected abstract byte[] ProcessInternal(byte[] buffer);
+
+        private class IndexedBufferFactory
+        {
+            private int count;
+
+            public IndexedBuffer GetNext()
+            {
+                var indexedBuffer = new IndexedBuffer(count++);
+                return indexedBuffer;
+            }
+
+            public void Reset()
+            {
+                count = 0;
+            }
+        }
+
+        private class EventWaitHandlesHelper
+        {
+            private readonly List<WaitHandle> waitHandles = new List<WaitHandle>();
+
+            public EventWaitHandle GetNew()
+            {
+                var waitHandle = new ManualResetEvent(false);
+                waitHandles.Add(waitHandle);
+                return waitHandle;
+            }
+
+            public void WaitAll()
+            {
+                WaitHandle.WaitAll(waitHandles.ToArray());
+            }
+        }
     }
 }

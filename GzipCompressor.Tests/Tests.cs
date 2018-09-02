@@ -53,17 +53,21 @@ namespace GzipCompressor.Tests
             var compressedFilePath = Path.Combine(DirPath, "compressed.gz");
             if (File.Exists(compressedFilePath)) File.Delete(compressedFilePath);
 
+            var decompressedFilePath = Path.Combine(DirPath, $"decompressed{fileName}");
+            if (File.Exists(decompressedFilePath)) File.Delete(decompressedFilePath);
+
             var expected = CalculateMD5(sourceFilePath);
 
             var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
-            var workerScheduler = new WorkerScheduler(16, logger);
-            var gzipCompressorFactory = new GzipCompressorFactory(logger, workerScheduler);
-            gzipCompressorFactory.Get(GzipConstants.Compress).Execute(sourceFilePath, compressedFilePath);
+            using (var pool = new WorkerPool(16))
+            {
+                var gzipCompressorFactory = new GzipCompressorFactory(logger, pool);
+                gzipCompressorFactory.Get(GzipConstants.Compress).Execute(sourceFilePath, compressedFilePath);
+                gzipCompressorFactory.Get(GzipConstants.Decompress).Execute(compressedFilePath,
+                    decompressedFilePath);
+            }
 
 
-            var decompressedFilePath = Path.Combine(DirPath, $"decompressed{fileName}");
-            gzipCompressorFactory.Get(GzipConstants.Decompress).Execute(compressedFilePath,
-                decompressedFilePath);
             var actual = CalculateMD5(decompressedFilePath);
             Assert.AreEqual(expected, actual);
         }

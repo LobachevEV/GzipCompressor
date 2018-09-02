@@ -27,13 +27,21 @@ namespace GzipCompressor.AdvanceCopier
         {
             using (var readQueue = new BoundedBlockingQueue<byte[]>(100))
             {
-                scheduler.StartNew(() => reader.Read(source, readQueue), readQueue.CompleteAdding);
+                scheduler.StartNew(() =>
+                {
+                    reader.Read(source, readQueue);
+                    readQueue.CompleteAdding();
+                });
                 using (var processedQueue = new BoundedBlockingQueue<IndexedBuffer>(100))
                 {
-                    var writeWaitHandle = new AutoResetEvent(false);
-                    scheduler.StartNew(() => writer.Write(processedQueue, target), waitHandle: writeWaitHandle);
-                    scheduler.StartNew(() => processor.Process(readQueue, processedQueue), processedQueue.CompleteAdding);
-                    WaitHandle.WaitAll(new WaitHandle[] {writeWaitHandle});
+                    scheduler.StartNew(() =>
+                    {
+                        processor.Process(readQueue, processedQueue);
+                        processedQueue.CompleteAdding();
+                    });
+                    var writeWaitHandle = new ManualResetEvent(false);
+                    scheduler.StartNew(() => writer.Write(processedQueue, target), writeWaitHandle);
+                    writeWaitHandle.WaitOne();
                 }
             }
         }

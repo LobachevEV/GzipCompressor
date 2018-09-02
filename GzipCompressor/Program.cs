@@ -17,7 +17,6 @@ namespace GzipCompressor
             var sourceFilePath = args[1];
             var targetFilePath = args[2];
             LogSettings.LogLevel = GetLogLevel();
-            var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
             if (File.Exists(targetFilePath)) File.Delete(targetFilePath);
 
 
@@ -27,13 +26,15 @@ namespace GzipCompressor
             {
                 timer.Elapsed += (sender, eventArgs) => progressBar.Step();
                 timer.Start();
-                BL.GzipCompressor compressor;
-                using (var workerScheduler = new WorkerScheduler(Math.Max(Environment.ProcessorCount * 2, 4), logger))
+
+                using (var pool = new WorkerPool(Math.Max(Environment.ProcessorCount * 2, 4)))
                 {
-                    compressor = new GzipCompressorFactory(logger, workerScheduler).Get(mode);
+                    var logger = LogFactory.GetInstance().GetLogger<ConsoleLogger>();
+                    var compressor = new GzipCompressorFactory(logger, pool).Get(mode);
                     var time = StopwatchHelper.Time(() => compressor.Execute(sourceFilePath, targetFilePath), logger);
                     Console.WriteLine($"{mode.ToLowerInvariant()}ing finished in {time}");
                 }
+
                 timer.Stop();
             }
 

@@ -9,10 +9,10 @@ namespace GzipCompressor.Infrastructure
         private readonly Logger logger;
         private readonly WorkerPool pool;
 
-        public WorkerScheduler(int maxCount, Logger logger)
+        public WorkerScheduler(WorkerPool pool, Logger logger)
         {
             this.logger = logger;
-            pool = new WorkerPool(maxCount);
+            this.pool = pool;
         }
 
         public void Dispose()
@@ -20,19 +20,15 @@ namespace GzipCompressor.Infrastructure
             pool.Dispose();
         }
 
-        public void StartNew(Action action, Action callBack = null, EventWaitHandle waitHandle = null)
+        public void StartNew(Action action, EventWaitHandle waitHandle = null)
         {
             Worker worker;
 
-            while (!pool.TryGetWorker(out worker))
-            {
-                Thread.Sleep(50);
-            }
+            while (!pool.TryGetWorker(out worker)) Thread.Sleep(50);
 
             worker.Start(() =>
             {
                 action.Invoke();
-                callBack?.Invoke();
                 waitHandle?.Set();
             });
         }

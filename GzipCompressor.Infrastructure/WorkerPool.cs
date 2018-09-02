@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace GzipCompressor.Infrastructure
 {
-    internal class WorkerPool : IDisposable
+    public class WorkerPool : IDisposable
     {
-        private readonly int maxCount;
         private readonly Queue<int> availableWorkers;
+        private readonly int maxCount;
         private readonly Dictionary<int, Worker> workers;
 
         public WorkerPool(int maxCount)
@@ -20,10 +20,7 @@ namespace GzipCompressor.Infrastructure
         {
             lock (workers)
             {
-                foreach (var worker in workers.Values)
-                {
-                    worker.Dispose();
-                }
+                foreach (var worker in workers.Values) worker.Dispose();
             }
         }
 
@@ -35,22 +32,13 @@ namespace GzipCompressor.Infrastructure
 
         public Worker GetWorker()
         {
-            if (TryGetAvailableWorker(out var worker))
-            {
-                return worker;
-            }
+            if (TryGetAvailableWorker(out var worker)) return worker;
 
-            if (workers.Count == maxCount)
-            {
-                return null;
-            }
+            if (workers.Count == maxCount) return null;
 
             lock (workers)
             {
-                if (workers.Count == maxCount)
-                {
-                    return null;
-                }
+                if (workers.Count == maxCount) return null;
 
                 var workerId = workers.Count + 1;
                 worker = new Worker {ManagedId = workerId};
@@ -63,17 +51,11 @@ namespace GzipCompressor.Infrastructure
         private bool TryGetAvailableWorker(out Worker worker)
         {
             worker = null;
-            if (availableWorkers.Count == 0)
-            {
-                return false;
-            }
+            if (availableWorkers.Count == 0) return false;
 
             lock (availableWorkers)
             {
-                if (availableWorkers.Count == 0)
-                {
-                    return false;
-                }
+                if (availableWorkers.Count == 0) return false;
 
                 var workerId = availableWorkers.Dequeue();
                 worker = workers[workerId];

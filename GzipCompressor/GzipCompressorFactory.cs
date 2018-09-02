@@ -11,10 +11,10 @@ namespace GzipCompressor
         private readonly Logger logger;
         private readonly WorkerScheduler workerScheduler;
 
-        public GzipCompressorFactory(Logger logger, WorkerScheduler workerScheduler)
+        public GzipCompressorFactory(Logger logger, WorkerPool workerPool)
         {
             this.logger = logger;
-            this.workerScheduler = workerScheduler;
+            workerScheduler = new WorkerScheduler(workerPool, logger);
         }
 
         public BL.GzipCompressor Get(string mode)

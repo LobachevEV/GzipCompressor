@@ -13,25 +13,25 @@ namespace GzipCompressor.Infrastructure
         private readonly Semaphore nonFullQueueSemaphore;
         private readonly Queue<T> queue = new Queue<T>();
 
-        public bool AddingCompleted { get; private set; }
-
         public BoundedBlockingQueue(int boundedCapacity)
         {
             nonFullQueueSemaphore = new Semaphore(boundedCapacity, boundedCapacity);
         }
 
+        public bool AddingCompleted { get; private set; }
+
         public void Dispose()
         {
             nonEmptyQueueSemaphore.Close();
             nonFullQueueSemaphore.Close();
-            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug($"Queue disposed");
+            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug("Queue disposed");
         }
 
         public void CompleteAdding()
         {
             nonEmptyQueueSemaphore.Release();
             AddingCompleted = true;
-            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug($"Queue complete");
+            LogFactory.GetInstance().GetLogger<ConsoleLogger>().Debug("Queue complete");
         }
 
         public void Add(T value)
@@ -47,16 +47,14 @@ namespace GzipCompressor.Infrastructure
 
         public T Take()
         {
-            T item;
-            if (!TryTake(out item)) throw new InvalidOperationException();
+            if (!TryTake(out var item)) throw new InvalidOperationException();
 
             return item;
         }
 
         public IEnumerable<T> Consume()
         {
-            T element;
-            while (TryTake(out element)) yield return element;
+            while (TryTake(out var element)) yield return element;
         }
 
         private bool TryTake(out T result)
@@ -68,7 +66,7 @@ namespace GzipCompressor.Infrastructure
                 {
                     nonEmptyQueueSemaphore.WaitOne();
                 }
-                catch (ObjectDisposedException e)
+                catch (ObjectDisposedException)
                 {
                     return false;
                 }

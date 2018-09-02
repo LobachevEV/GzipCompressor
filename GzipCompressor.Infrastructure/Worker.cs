@@ -5,19 +5,19 @@ namespace GzipCompressor.Infrastructure
 {
     internal enum WorkerState
     {
-        Unstarted,
-        Starting,
+        NotStarted,
         Running,
         Waiting
     }
 
-    internal class Worker : IDisposable
+    public class Worker : IDisposable
     {
+        private readonly object actionSync = new object();
         private readonly AutoResetEvent internalEvent = new AutoResetEvent(false);
-        private readonly object sync = new object();
-        private Action mainAction;
-        private volatile WorkerState state = WorkerState.Unstarted;
+        private readonly object stateSync = new object();
+        private Action action;
         private volatile bool disposed;
+        private volatile WorkerState state = WorkerState.NotStarted;
         private Thread thread;
 
         public int ManagedId { get; set; }
@@ -32,44 +32,69 @@ namespace GzipCompressor.Infrastructure
 
         public event Action OnComplete;
 
-        public void Start(Action action)
+        public void Start(Action newAction)
         {
-            if (state != WorkerState.Waiting && state != WorkerState.Unstarted)
-                throw new Exception("Cannot start started thread");
-
-            state = WorkerState.Starting;
-            lock (sync)
+            switch (state)
             {
-                mainAction = action;
-            }
-
-            if (thread == null)
-            {
-                thread = CreateThread();
-                thread.Start();
-            }
-            else
-            {
-                internalEvent.Set();
+                case WorkerState.NotStarted:
+                    StateRunning(newAction);
+                    InitThread();
+                    break;
+                case WorkerState.Running:
+                    throw new Exception("Cannot start running worker");
+                case WorkerState.Waiting:
+                    StateRunning(newAction);
+                    internalEvent.Set();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
-        private Thread CreateThread()
+        private void StateWaiting()
         {
-            return new Thread(() =>
+            SetState(WorkerState.Waiting);
+            OnComplete?.Invoke();
+            internalEvent.WaitOne();
+        }
+
+        private void StateRunning(Action newAction)
+        {
+            SetState(WorkerState.Running);
+            SetAction(newAction);
+        }
+
+        private void SetState(WorkerState newState)
+        {
+            lock (stateSync)
+            {
+                state = newState;
+            }
+        }
+
+        private void SetAction(Action newAction)
+        {
+            lock (actionSync)
+            {
+                action = newAction;
+            }
+        }
+
+        private void InitThread()
+        {
+            thread = new Thread(() =>
             {
                 while (!disposed)
                 {
-                    state = WorkerState.Running;
-                    lock (sync)
+                    lock (actionSync)
                     {
-                        mainAction?.Invoke();
+                        action?.Invoke();
                     }
-                    state = WorkerState.Waiting;
-                    OnComplete?.Invoke();
-                    internalEvent.WaitOne();
+
+                    StateWaiting();
                 }
             });
+            thread.Start();
         }
     }
 }
