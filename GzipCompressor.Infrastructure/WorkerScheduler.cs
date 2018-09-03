@@ -4,7 +4,7 @@ using GzipCompressor.Infrastructure.Logging;
 
 namespace GzipCompressor.Infrastructure
 {
-    public class WorkerScheduler : IDisposable
+    public class WorkerScheduler
     {
         private readonly Logger logger;
         private readonly WorkerPool pool;
@@ -13,11 +13,6 @@ namespace GzipCompressor.Infrastructure
         {
             this.logger = logger;
             this.pool = pool;
-        }
-
-        public void Dispose()
-        {
-            pool.Dispose();
         }
 
         public void StartNew(Action action, EventWaitHandle waitHandle = null)
